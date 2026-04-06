@@ -80,6 +80,14 @@ gcloud projects add-iam-policy-binding <gcp-project-id> \
     --role="roles/iam.serviceAccountUser"
 ```
 
+The default Compute Engine service account also requires `roles/dataproc.worker` so cluster nodes can communicate with the Dataproc control plane:
+
+```bash
+gcloud projects add-iam-policy-binding <gcp-project-id> \
+    --member="serviceAccount:<project-number>-compute@developer.gserviceaccount.com" \
+    --role="roles/dataproc.worker"
+```
+
 The three repository variables required by the CI workflow are:
 
 | Variable | Description |
