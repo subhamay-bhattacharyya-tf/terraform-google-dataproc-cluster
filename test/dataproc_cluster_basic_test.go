@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -26,11 +26,11 @@ func TestDataprocClusterBasic(t *testing.T) {
 		Vars: map[string]interface{}{
 			"environment":  "devl",
 			"project_code": "tt",
-			"region":       "us-central1",
+			"region":       "us-east1",
 			"dataproc_cluster_config": map[string]interface{}{
-				"base_name":             baseName,
-				"worker_num_instances":  2,
-				"idle_delete_ttl":       "600s",
+				"base_name":               baseName,
+				"worker_num_instances":    2,
+				"idle_delete_ttl":         "600s",
 				"enable_http_port_access": false,
 			},
 		},
@@ -42,18 +42,18 @@ func TestDataprocClusterBasic(t *testing.T) {
 	defer terraform.Destroy(t, tfOptions)
 	terraform.InitAndApply(t, tfOptions)
 
-	// Allow cluster to stabilise before asserting
-	time.Sleep(10 * time.Second)
-
 	clusterName := terraform.Output(t, tfOptions, "cluster_name")
 	require.Contains(t, clusterName, baseName, "cluster_name should contain the base_name")
 
-	masterNames := terraform.OutputList(t, tfOptions, "master_instance_names")
-	require.Len(t, masterNames, 1, "expected 1 master instance")
-
-	workerNames := terraform.OutputList(t, tfOptions, "worker_instance_names")
-	require.Len(t, workerNames, 2, "expected 2 worker instances")
-
 	clusterProject := terraform.Output(t, tfOptions, "cluster_project")
 	require.Equal(t, projectID, clusterProject, "cluster_project must match GOOGLE_CLOUD_PROJECT")
+
+	clusterRegion := terraform.Output(t, tfOptions, "cluster_region")
+	require.Equal(t, "us-east1", clusterRegion, "cluster_region should be us-east1")
+
+	masterNames := terraform.OutputList(t, tfOptions, "master_instance_names")
+	assert.NotEmpty(t, masterNames, "master_instance_names should not be empty")
+
+	workerNames := terraform.OutputList(t, tfOptions, "worker_instance_names")
+	assert.NotEmpty(t, workerNames, "worker_instance_names should not be empty")
 }

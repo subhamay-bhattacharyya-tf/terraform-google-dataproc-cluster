@@ -11,7 +11,7 @@ This module provisions a single `google_storage_bucket` resource via the `terraf
 ## Requirements
 
 | Requirement | Version |
-|---|---|
+| --- | --- |
 | Terraform | >= 1.3.0 |
 | Google Provider | >= 7.23.0 |
 
@@ -31,7 +31,7 @@ module "gcs_bucket" {
 ## Input Variables
 
 | Name | Description | Type | Default | Required |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | `bucket_name` | Name of the GCS bucket | `string` | — | yes |
 | `project_id` | GCP project ID | `string` | `"portfolio-site"` | no |
 | `region` | GCP region | `string` | `"us-central1"` | no |
@@ -46,7 +46,7 @@ module "gcs_bucket" {
 ## Outputs
 
 | Name | Description |
-|---|---|
+| --- | --- |
 | `bucket_id` | The ID of the GCS bucket |
 | `bucket_name` | The name of the GCS bucket |
 | `bucket_project` | The project ID where the bucket is created |
