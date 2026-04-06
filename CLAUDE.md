@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this module does
 
-This is a **Terraform module** that creates and manages a single `google_storage_bucket` resource on GCP. The entire public interface is one input variable (`gcs_config`) and eight outputs (id, name, project, location, url, self_link, storage_class, force_destroy). This will be used as a GitHub Repository Template. The actual modules with me implemented seperately.
+This is a **Terraform module** that creates and manages a single `google_dataproc_cluster` resource on GCP. The entire public interface is one input variable (`dataproc_cluster_config`) and outputs covering key cluster attributes (id, name, project, region, master_instance_names, worker_instance_names, http_ports). This will be used as a GitHub Repository Template. The actual modules will be implemented separately.
 
 ## Common commands
 
@@ -16,10 +16,10 @@ terraform fmt -check -recursive
 terraform init -backend=false && terraform validate
 
 # Validate the example
-cd examples/bucket/basic && terraform init -backend=false && terraform validate
+cd examples/dataproc/basic && terraform init -backend=false && terraform validate
 
 # Run Terratest integration test (requires GCP auth + GOOGLE_CLOUD_PROJECT env var)
-cd test && go test -v -timeout 30m -run TestGCSBucketBasic ./gcs_bucket_basic_test.go ./helpers_test.go
+cd test && go test -v -timeout 30m -run TestDataprocClusterBasic ./dataproc_cluster_basic_test.go ./helpers_test.go
 
 # Install local dev tools (Linux/devcontainer only)
 bash install-tools.sh
@@ -34,33 +34,32 @@ pre-commit run --all-files
 
 ```text
 .                      # Root module — the publishable Terraform module
-├── main.tf            # Single google_storage_bucket resource
-├── variables.tf       # gcs_config object variable with all validations
-├── outputs.tf         # Eight bucket attribute outputs
+├── main.tf            # Single google_dataproc_cluster resource
+├── variables.tf       # dataproc_cluster_config object variable with all validations
+├── outputs.tf         # Cluster attribute outputs (id, name, project, region, cluster_uuid, etc.)
 ├── versions.tf        # Terraform >= 1.3.0, google provider >= 7.23.0
 ├── examples/
-│   └── bucket/basic/  # Reference usage; CI validates this separately
+│   └── dataproc/basic/  # Reference usage; CI validates this separately
 └── test/
-    ├── gcs_bucket_basic_test.go   # Terratest: creates real bucket, asserts outputs, destroys
-    └── helpers_test.go            # Shared test helpers (currently AWS-flavoured — leftover from template)
+    ├── dataproc_cluster_basic_test.go   # Terratest: creates real cluster, asserts outputs, destroys
+    └── helpers_test.go                  # Shared test helpers
 ```
 
 ## Key Conventions
 
 - Terraform files use `/` directory with standard layout (main.tf, variables.tf, outputs.tf)
-- GitHub Actions uses OIDC — no stored AWS access keys
-- All infrastructure changes go through Terraform — never modify AWS resources manually
-- Site content changes deploy automatically via GitHub Actions on push to main
-- This Terraform module only sccept one input of object type
+- GitHub Actions uses OIDC — no stored service account keys
+- All infrastructure changes go through Terraform — never modify GCP resources manually
+- This Terraform module only accepts one input of object type
 
-The module uses a single structured `gcs_config` object rather than flat variables. All validation (naming rules, storage class enum, project ID format, public access prevention values) lives in `variables.tf`.
+The module uses a single structured `dataproc_cluster_config` object rather than flat variables. All validation (naming rules, region/zone format, machine type values, project ID format) lives in `variables.tf`.
 
 ## CI pipeline (`.github/workflows/ci.yaml`)
 
 Runs on pushes/PRs to `main`, `feature/**`, `bug/**` when `.tf`, `examples/**`, or `test/**` files change:
 
 1. **terraform-validate** — `fmt -check`, `init`, `validate` on the root module
-2. **examples-validate** — `init` + `validate` on `examples/bucket/basic` (needs step 1)
+2. **examples-validate** — `init` + `validate` on `examples/dataproc/basic` (needs step 1)
 3. **terratest** — real GCP integration test via Workload Identity Federation (needs step 2); requires `GCP_PROJECT_ID`, `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT` repo vars
 4. **generate-changelog** — runs `git-cliff` on non-main branches (needs step 2)
 5. **semantic-release** — runs only on `main` after steps 2 and 3; uses Conventional Commits to auto-version
@@ -76,6 +75,9 @@ Follows **Conventional Commits** — semantic-release uses this to determine the
 
 ## Known inconsistencies (leftover from template)
 
-- `README.md` describes a GCP project-hierarchy module — it is stale and does not reflect this module.
-- `test/helpers_test.go` contains AWS S3 helpers; `test/go.mod` references `terraform-aws-s3`. These are unused by the GCS test and should be replaced with GCS-specific helpers when adding new tests.
-- `install-tools.sh` includes AWS CLI installation; not needed for a GCP-only module.
+- `README.md` describes a GCS bucket module (`google_storage_bucket`) — stale, needs rewriting for `google_dataproc_cluster`.
+- `main.tf`, `variables.tf`, and `outputs.tf` still implement GCS bucket logic — need full replacement with Dataproc cluster resources and variables.
+- `test/gcs_bucket_basic_test.go` tests GCS bucket creation (`TestGCSBucketBasic`) — needs replacing with a Dataproc cluster test (`dataproc_cluster_basic_test.go`).
+- `test/helpers_test.go` uses `cloud.google.com/go/storage` GCS client helpers — needs replacing with Dataproc-specific helpers using the Dataproc client library.
+- `test/go.mod` module path references the old template repo name and declares `cloud.google.com/go/storage` as a dependency — the path and dependency should be updated for Dataproc.
+- `examples/bucket/` directory needs replacing with `examples/dataproc/`.

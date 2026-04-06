@@ -7,9 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"cloud.google.com/go/storage"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/api/iterator"
+	"google.golang.org/api/dataproc/v1"
 )
 
 // mustEnv retrieves a required environment variable, failing the test if absent.
@@ -20,49 +19,26 @@ func mustEnv(t *testing.T, key string) string {
 	return v
 }
 
-// newGCSClient creates an authenticated GCS client.
-func newGCSClient(t *testing.T) *storage.Client {
+// newDataprocService creates an authenticated Dataproc REST client.
+func newDataprocService(t *testing.T) *dataproc.Service {
 	t.Helper()
 	ctx := context.Background()
-	client, err := storage.NewClient(ctx)
-	require.NoError(t, err, "Failed to create GCS client")
-	return client
+	svc, err := dataproc.NewService(ctx)
+	require.NoError(t, err, "Failed to create Dataproc service client")
+	return svc
 }
 
-// bucketExists reports whether the named bucket is accessible.
-func bucketExists(t *testing.T, client *storage.Client, bucketName string) bool {
+// clusterExists reports whether the named Dataproc cluster is accessible.
+func clusterExists(t *testing.T, svc *dataproc.Service, projectID, region, clusterName string) bool {
 	t.Helper()
-	ctx := context.Background()
-	_, err := client.Bucket(bucketName).Attrs(ctx)
+	_, err := svc.Projects.Regions.Clusters.Get(projectID, region, clusterName).Do()
 	return err == nil
 }
 
-// fetchBucketAttrs returns the GCS BucketAttrs for the named bucket.
-func fetchBucketAttrs(t *testing.T, client *storage.Client, bucketName string) *storage.BucketAttrs {
+// fetchClusterState returns the current state string of the named Dataproc cluster.
+func fetchClusterState(t *testing.T, svc *dataproc.Service, projectID, region, clusterName string) string {
 	t.Helper()
-	ctx := context.Background()
-	attrs, err := client.Bucket(bucketName).Attrs(ctx)
-	require.NoError(t, err, "Failed to get bucket attributes for %s", bucketName)
-	return attrs
-}
-
-// listBucketObjects returns the object keys in the named bucket.
-func listBucketObjects(t *testing.T, client *storage.Client, bucketName string) []string {
-	t.Helper()
-	ctx := context.Background()
-	var keys []string
-	it := client.Bucket(bucketName).Objects(ctx, nil)
-	for {
-		obj, err := it.Next()
-		if err == iterator.Done {
-			break
-		}
-		require.NoError(t, err, "Failed to list objects in bucket %s", bucketName)
-		keys = append(keys, obj.Name)
-	}
-	return keys
-}
-
-func stringPtr(s string) *string {
-	return &s
+	cluster, err := svc.Projects.Regions.Clusters.Get(projectID, region, clusterName).Do()
+	require.NoError(t, err, "Failed to get cluster %s", clusterName)
+	return cluster.Status.State
 }

@@ -62,10 +62,22 @@ The Terratest job authenticates to GCP via [Workload Identity Federation](https:
 
 ```bash
 gcloud iam service-accounts add-iam-policy-binding \
-    "sa-17-cloud-storage@prj-17-cloud-storage-16748.iam.gserviceaccount.com" \
-    --project="prj-17-cloud-storage-16748" \
+    "<service-account-email>" \
+    --project="<gcp-project-id>" \
     --role="roles/iam.workloadIdentityUser" \
-    --member="principalSet://iam.googleapis.com/projects/578842011545/locations/global/workloadIdentityPools/github-actions/attribute.repository/subhamay-bhattacharyya-tf/terraform-google-module-template"
+    --member="principalSet://iam.googleapis.com/projects/<project-number>/locations/global/workloadIdentityPools/<pool-name>/attribute.repository/<github-org>/terraform-google-dataproc-cluster"
+```
+
+The service account also requires the following roles on the project to create and destroy Dataproc clusters during Terratest runs:
+
+```bash
+gcloud projects add-iam-policy-binding <gcp-project-id> \
+    --member="serviceAccount:<service-account-email>" \
+    --role="roles/dataproc.editor"
+
+gcloud projects add-iam-policy-binding <gcp-project-id> \
+    --member="serviceAccount:<service-account-email>" \
+    --role="roles/iam.serviceAccountUser"
 ```
 
 The three repository variables required by the CI workflow are:

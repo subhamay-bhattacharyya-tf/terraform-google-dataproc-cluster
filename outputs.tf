@@ -1,43 +1,38 @@
 # ============================================================================
-# GCS Bucket Module - Outputs
+# Dataproc Cluster Module - Outputs
 # ============================================================================
 
-output "bucket_id" {
-  description = "The ID of the GCS bucket."
-  value       = google_storage_bucket.this.id
+output "cluster_id" {
+  description = "The fully-qualified resource ID of the Dataproc cluster."
+  value       = google_dataproc_cluster.this.id
 }
 
-output "bucket_name" {
-  description = "The name of the GCS bucket."
-  value       = google_storage_bucket.this.name
+output "cluster_name" {
+  description = "The name of the Dataproc cluster."
+  value       = google_dataproc_cluster.this.name
 }
 
-output "bucket_project" {
-  description = "The project ID where the bucket is created."
-  value       = google_storage_bucket.this.project
+output "cluster_project" {
+  description = "The GCP project in which the cluster was created."
+  value       = google_dataproc_cluster.this.project
 }
 
-output "bucket_location" {
-  description = "The location of the GCS bucket."
-  value       = google_storage_bucket.this.location
+output "cluster_region" {
+  description = "The GCP region of the cluster."
+  value       = google_dataproc_cluster.this.region
 }
 
-output "bucket_url" {
-  description = "The URL of the GCS bucket."
-  value       = google_storage_bucket.this.url
+output "master_instance_names" {
+  description = "List of master node instance names."
+  value       = google_dataproc_cluster.this.cluster_config[0].master_config[0].instance_names
 }
 
-output "bucket_self_link" {
-  description = "The self link of the GCS bucket resource."
-  value       = google_storage_bucket.this.self_link
+output "worker_instance_names" {
+  description = "List of primary worker node instance names."
+  value       = google_dataproc_cluster.this.cluster_config[0].worker_config[0].instance_names
 }
 
-output "bucket_storage_class" {
-  description = "The storage class of the GCS bucket."
-  value       = google_storage_bucket.this.storage_class
-}
-
-output "bucket_force_destroy" {
-  description = "Whether force_destroy is enabled for the GCS bucket."
-  value       = google_storage_bucket.this.force_destroy
+output "http_ports" {
+  description = "Map of component web UI ports exposed on the cluster (e.g. Yarn, Spark History Server)."
+  value       = length(google_dataproc_cluster.this.cluster_config[0].endpoint_config) > 0 ? google_dataproc_cluster.this.cluster_config[0].endpoint_config[0].http_ports : {}
 }

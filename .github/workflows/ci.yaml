@@ -69,7 +69,17 @@ jobs:
     strategy:
       matrix:
         example:
-          - examples/bucket/basic
+          - examples/dataproc/basic
+          - examples/dataproc/high-availability
+          - examples/dataproc/high-memory
+          - examples/dataproc/with-preemptible-workers
+          - examples/dataproc/with-jupyter
+          - examples/dataproc/with-optional-components
+          - examples/dataproc/with-custom-network
+          - examples/dataproc/with-lifecycle
+          - examples/dataproc/with-service-account
+          - examples/dataproc/with-labels
+          - examples/dataproc/complete
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -129,13 +139,13 @@ jobs:
           go mod download
         working-directory: test
 
-      - name: Run Terratest - GCS Bucket Basic
-        id: gcs-bucket-basic-test
+      - name: Run Terratest - Dataproc Cluster Basic
+        id: dataproc-cluster-basic-test
         run: |
           set -o pipefail
-          go test -v -timeout 30m -run TestGCSBucketBasic \
-            ./gcs_bucket_basic_test.go ./helpers_test.go 2>&1 | tee test_output.txt
-          echo "## GCS Bucket Basic Test Results" >> $GITHUB_STEP_SUMMARY
+          go test -v -timeout 30m -run TestDataprocClusterBasic \
+            ./dataproc_cluster_basic_test.go ./helpers_test.go 2>&1 | tee test_output.txt
+          echo "## Dataproc Cluster Basic Test Results" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           cat test_output.txt >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
