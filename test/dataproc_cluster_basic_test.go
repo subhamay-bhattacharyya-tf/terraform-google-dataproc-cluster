@@ -26,7 +26,7 @@ func TestDataprocClusterBasic(t *testing.T) {
 		Vars: map[string]interface{}{
 			"environment":  "devl",
 			"project_code": "tt",
-			"region":       "us-east1",
+			"region":       "europe-west1",
 			"dataproc_cluster_config": map[string]interface{}{
 				"base_name":               baseName,
 				"worker_num_instances":    2,
@@ -49,7 +49,7 @@ func TestDataprocClusterBasic(t *testing.T) {
 	require.Equal(t, projectID, clusterProject, "cluster_project must match GOOGLE_CLOUD_PROJECT")
 
 	clusterRegion := terraform.Output(t, tfOptions, "cluster_region")
-	require.Equal(t, "us-east1", clusterRegion, "cluster_region should be us-east1")
+	require.Equal(t, "europe-west1", clusterRegion, "cluster_region should be europe-west1")
 
 	masterNames := terraform.OutputList(t, tfOptions, "master_instance_names")
 	assert.NotEmpty(t, masterNames, "master_instance_names should not be empty")
